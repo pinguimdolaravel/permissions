@@ -11,6 +11,16 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     You're logged in!
                 </div>
+
+                <div class="bg-indigo-50 p-6 border-b border-indigo-400">
+                    User
+                    @can('edit-articles')
+                        can
+                    @else
+                        can't
+                    @endif
+                    edit-articles
+                </div>
             </div>
         </div>
     </div>
