@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -40,5 +41,19 @@ class PermissionUserTest extends TestCase
         $this->actingAs($user)
             ->get('test-something-weird')
             ->assertSuccessful();
+    }
+
+    /** @test */
+    public function it_should_be_able_to_use_policies_with_my_permissions()
+    {
+        /** @var User $user */
+        $user = User::factory()->createOne();
+        $post = $user->posts()->save(Post::factory()->make());
+
+        /** @var User $user2 */
+        $user2 = User::factory()->createOne();
+        $this->actingAs($user2)
+            ->delete(route('posts.destroy', $post))
+            ->assertForbidden();
     }
 }
