@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Permission;
 use App\Models\Post;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -55,5 +57,14 @@ class PermissionUserTest extends TestCase
         $this->actingAs($user2)
             ->delete(route('posts.destroy', $post))
             ->assertForbidden();
+    }
+
+    /** @test */
+    public function the_list_of_permissions_should_be_cached()
+    {
+        Permission::query()->create(['permission' => 'edit-articles']);
+
+        $fromCache = Cache::get('permissions');
+        $this->assertCount(1, $fromCache);
     }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -55,14 +57,29 @@ class User extends Authenticatable
 
     public function givePermissionTo(string $permission): void
     {
-        /** @var Permission $p */
-        $p = Permission::query()->firstOrCreate(compact('permission'));
+        $p = Permission::getPermission($permission);
 
         $this->permissions()->attach($p);
+
+        Cache::forget('permissions::of::user::'.$this->id);
+    }
+
+    public function removePermissionTo(string $permission): void
+    {
+        $p = Permission::getPermission($permission);
+
+        $this->permissions()->detach($p);
+
+        Cache::forget('permissions::of::user::'.$this->id);
     }
 
     public function hasPermissionTo(string $permission): bool
     {
-        return $this->permissions()->where('permission', $permission)->exists();
+        /** @var Collection $permissionsOfUser */
+        $permissionsOfUser = Cache::rememberForever('permissions::of::user::'.$this->id, function () {
+            return $this->permissions()->get();
+        });
+
+        return $permissionsOfUser->where('permission', $permission)->isNotEmpty();
     }
 }
